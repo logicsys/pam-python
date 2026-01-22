@@ -608,7 +608,7 @@ static PyObject* PamMessage_new(
 
   err = PyArg_ParseTupleAndKeywords(
       args, kwds, "iO!:Message", kwlist,
-      &msg_style, &PyBytes_Type, &msg);
+      &msg_style, &PyUnicode_Type, &msg);
   if (!err)
     goto error_exit;
   pamMessage = (PamMessageObject*)type->tp_alloc(type, 0);
