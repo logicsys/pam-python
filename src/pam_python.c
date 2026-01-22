@@ -678,7 +678,7 @@ static PyObject* PamResponse_new(
       &resp, &resp_retcode);
   if (!err)
     goto error_exit;
-  if (resp != Py_None && !PyBytes_Check(resp))
+  if (resp != Py_None && !PyUnicode_Check(resp))
   {
     PyErr_SetString(PyExc_TypeError, "resp must be a string or None");
     goto error_exit;
@@ -745,7 +745,7 @@ static PyObject* PamXAuthData_new(
   static char*		kwlist[] = {"name", "data", 0};
 
   err = PyArg_ParseTupleAndKeywords(
-      args, kwds, "SS:XAuthData", kwlist,
+      args, kwds, "UU:XAuthData", kwlist,
       &name, &data);
   if (!err)
     goto error_exit;
@@ -806,7 +806,7 @@ static PyObject* PamHandle_get_item(PyObject* self, int item_type)
   if (check_pam_result(pamHandle, pam_result) == -1)
     goto error_exit;
   if (value != 0)
-    result = PyBytes_FromString(value);
+    result = PyUnicode_FromString(value);
   else
   {
     result = Py_None;
@@ -968,8 +968,8 @@ static PyObject* PamEnvIter_key_entry(const char* entry)
 
   equals = strchr(entry, '=');
   if (equals == 0)
-    return PyBytes_FromString(entry);
-  return PyBytes_FromStringAndSize(entry, equals - entry);
+    return PyUnicode_FromString(entry);
+  return PyUnicode_FromStringAndSize(entry, equals - entry);
 }
 
 /*
@@ -981,8 +981,8 @@ static PyObject* PamEnvIter_value_entry(const char* entry)
 
   equals = strchr(entry, '=');
   if (equals == 0)
-    return PyBytes_FromString("");
-  return PyBytes_FromString(equals + 1);
+    return PyUnicode_FromString("");
+  return PyUnicode_FromString(equals + 1);
 }
 
 /*
@@ -1037,12 +1037,14 @@ static const char* PamEnv_getkey(PyObject* key)
 {
   const char*		result;
 
-  if (!PyBytes_Check(key))
+  if (!PyUnicode_Check(key))
   {
     PyErr_SetString(PyExc_TypeError, "PAM environment key must be a string");
     return 0;
   }
-  result = PyBytes_AS_STRING(key);
+  result = PyUnicode_AsUTF8(key);
+  if (result == 0)
+    return 0;
   if (*result == '\0')
   {
     PyErr_SetString(
@@ -1094,7 +1096,7 @@ static PyObject* PamEnv_mp_subscript(PyObject* self, PyObject* key)
     PyErr_SetString(PyExc_KeyError, key_str);
     goto error_exit;
   }
-  result = PyBytes_FromString(value);
+  result = PyUnicode_FromString(value);
 
 error_exit:
   return result;
@@ -1118,19 +1120,24 @@ static int PamEnv_mp_assign(PyObject* self, PyObject* key, PyObject* value)
     value_str = (char*)key_str;
   else
   {
-    if (!PyBytes_Check(value))
+    if (!PyUnicode_Check(value))
     {
       PyErr_SetString(
           PyExc_TypeError, "PAM environment value must be a string");
       goto error_exit;
     }
-    value_str = malloc(PyBytes_Size(key) + 1 + PyBytes_Size(value) + 1);
-    if (value_str == 0)
     {
-      PyErr_NoMemory();
-      goto error_exit;
+      const char* value_utf8 = PyUnicode_AsUTF8(value);
+      if (value_utf8 == 0)
+        goto error_exit;
+      value_str = malloc(strlen(key_str) + 1 + strlen(value_utf8) + 1);
+      if (value_str == 0)
+      {
+        PyErr_NoMemory();
+        goto error_exit;
+      }
+      strcat(strcat(strcpy(value_str, key_str), "="), value_utf8);
     }
-    strcat(strcat(strcpy(value_str, key_str), "="), PyBytes_AS_STRING(value));
   }
   pam_result = pam_putenv(pamEnv->pamHandle->pamh, value_str);
   if (pam_result != PAM_SUCCESS) // PAM_BAD_ITEM in Linux = PAM_BUF_ERR,PAM_SYSTEM_ERR
@@ -1227,7 +1234,7 @@ static PyObject* PamEnv_get(
     goto error_exit;
   value_str = pam_getenv(pamEnv->pamHandle->pamh, key_str);
   if (value_str != 0)
-    result = PyBytes_FromString(value_str);
+    result = PyUnicode_FromString(value_str);
   else
   {
     result = default_value != 0 ? default_value : Py_None;
@@ -1987,7 +1994,7 @@ static PyObject* PamHandle_get_user(
   if (check_pam_result(pamHandle, pam_result) == -1)
     goto error_exit;
   if (user != 0)
-    result = PyBytes_FromString(user);
+    result = PyUnicode_FromString(user);
   else
   {
     result = Py_None;
@@ -2031,7 +2038,7 @@ static PyObject* PamHandle_strerror(
   }
   else
   {
-    result = PyBytes_FromString(err);
+    result = PyUnicode_FromString(err);
     if (result == 0)
       goto error_exit;
   }
@@ -2325,7 +2332,7 @@ static PyTypeObject* newHeapType(
   PyTypeObject*		result = 0;
   PyTypeObject*		type = 0;
 
-  pyName = PyBytes_FromString(name);
+  pyName = PyUnicode_FromString(name);
   if (pyName == 0)
     goto error_exit;
   type = (PyTypeObject*)PyType_Type.tp_alloc(&PyType_Type, 0);
@@ -2359,7 +2366,7 @@ static PyTypeObject* newHeapType(
   pyName = 0;
   PyType_Ready(type);
   type->tp_new = new;
-  if (PyType_Ready(type) == 0)
+  if (PyType_Ready(type) < 0)
     goto error_exit;
   if (PyDict_SetItemString(type->tp_dict, "__module__", module) == -1)
     goto error_exit;
@@ -2746,12 +2753,12 @@ static int call_python_handler(
     }
     for (i = 0; i < argc; i += 1)
     {
-      arg_object = PyBytes_FromString(argv[i]);
+      arg_object = PyUnicode_FromString(argv[i]);
       if (arg_object == 0)
       {
 	pam_result = syslog_exception(
 	    pamHandle,
-	    "PyBytes_FromString(argv[i]) failed");
+	    "PyUnicode_FromString(argv[i]) failed");
 	goto error_exit;
       }
       PyList_SET_ITEM(argv_object, i, arg_object);
