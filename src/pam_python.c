@@ -364,9 +364,14 @@ static int syslog_python2pam(PyObject* exception_type)
  */
 static const char* get_module_path(PamHandleObject* pamHandle)
 {
-  const char* result = PyModule_GetFilename(pamHandle->module);
-  if (result != 0)
-    return result;
+  PyObject* filename_obj = PyModule_GetFilenameObject(pamHandle->module);
+  if (filename_obj != 0)
+  {
+    const char* result = PyUnicode_AsUTF8(filename_obj);
+    if (result != 0)
+      return result;
+  }
+  PyErr_Clear();
   return MODULE_NAME;
 }
 
@@ -530,7 +535,7 @@ static int syslog_path_traceback(
       "OOOOO", ptype, pvalue, ptraceback, Py_None, pamHandle->syslogFile);
   if (args != 0)
   {
-    py_resultobj = PyEval_CallObject(pamHandle->print_exception, args);
+    py_resultobj = PyObject_CallObject(pamHandle->print_exception, args);
     if (py_resultobj != 0)
       SyslogFile_flush(pamHandle->syslogFile);
   }
@@ -818,15 +823,16 @@ static int PamHandle_set_item(
   PamHandleObject*	pamHandle = (PamHandleObject*)self;
   int			pam_result;
   int			result = -1;
-  char*			value;
+  char*			value = 0;
+  const char*		utf8_value;
   char			error_message[64];
 
   if (pyValue == Py_None)
     value = 0;
   else
   {
-    value = PyUnicode_AsUTF8(pyValue);
-    if (value == 0)
+    utf8_value = PyUnicode_AsUTF8(pyValue);
+    if (utf8_value == 0)
     {
       snprintf(
           error_message, sizeof(error_message),
@@ -834,7 +840,7 @@ static int PamHandle_set_item(
       PyErr_SetString(PyExc_TypeError, error_message);
       goto error_exit;
     }
-    value = strdup(value);
+    value = strdup(utf8_value);
     if (value == 0)
     {
       PyErr_NoMemory();
@@ -2764,7 +2770,7 @@ static int call_python_handler(
   /*
    * Call the Python handler function.
    */
-  py_resultobj = PyEval_CallObject(handler_function, handler_args);
+  py_resultobj = PyObject_CallObject(handler_function, handler_args);
   /*
    * Did it throw an exception?
    */

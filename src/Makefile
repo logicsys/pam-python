@@ -26,7 +26,7 @@ clean:
 
 .PHONY: ctest
 ctest:	ctest.c Makefile
-	gcc -O0 $(WARNINGS) -g -o $@ ctest.c -lpam -lpython3.6m
+	gcc -O0 $(WARNINGS) -g -o $@ ctest.c -lpam $$(python3-config --libs --embed 2>/dev/null || python3-config --libs)
 
 test-pam_python.pam: test-pam_python.pam.in Makefile
 	sed "s,\\\$$PWD,$$(pwd),g" "$@.in" >"$@.tmp"
@@ -37,7 +37,7 @@ test-pam_python.pam: test-pam_python.pam.in Makefile
 
 .PHONY: test
 test: pam_python.so ctest /etc/pam.d/test-pam_python.pam
-	python test.py
+	python3 test.py
 	./ctest
 
 test-pam_python-installed.pam: test-pam_python.pam.in Makefile
@@ -49,5 +49,5 @@ test-pam_python-installed.pam: test-pam_python.pam.in Makefile
 
 .PHONY: installed-test
 installed-test: ctest /etc/pam.d/test-pam_python-installed.pam
-	python test.py
+	python3 test.py
 	./ctest

@@ -39,6 +39,12 @@ else:
 
 libpython_so = distutils.sysconfig.get_config_var('INSTSONAME')
 
+# Python 3.8+ removed the 'm' (pymalloc) suffix from library names
+if sys.version_info >= (3, 8):
+    python_lib = "python%d.%d" % sys.version_info[:2]
+else:
+    python_lib = "python%d.%dm" % sys.version_info[:2]
+
 ext_modules = [
     Extension(
         "pam_python",
@@ -46,7 +52,7 @@ ext_modules = [
         include_dirs=['/usr/local/lib/'],
         library_dirs=[],
         define_macros=[('LIBPYTHON_SO', '"' + libpython_so + '"')] + Py_DEBUG,
-        libraries=["pam", "python%d.%dm" % sys.version_info[:2]],
+        libraries=["pam", python_lib],
         extra_compile_args=extra_compile_args,
     ),
 ]

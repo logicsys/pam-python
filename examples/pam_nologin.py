@@ -13,7 +13,7 @@ def parse_args(pamh, argv):
   nologin_file = "/etc/nologin"
   retval_when_nofile = pamh.PAM_IGNORE
   for arg in argv[1:]:
-    if arg.starts_with("file="):
+    if arg.startswith("file="):
       nologin_file = arg[5:]
     elif arg == "successok":
       retval_when_nofile = pamh.PAM_SUCCESS
@@ -36,7 +36,7 @@ def check_nologin(pamh, nologin_file, retval_when_nofile):
   # Can we open the file?
   #
   try:
-    handle = file(nologin_file, "r")
+    handle = open(nologin_file, "r")
   except EnvironmentError:
     return retval_when_nofile
   #
