@@ -35,10 +35,25 @@ def pam_sm_chauthtok(pamh, flags, argv):
 
 def test(who, pamh, flags, argv):
   import test
+  import sys
+  sys.stderr.write(f"DEBUG test(): who={who.__name__}, hasattr={hasattr(test, 'test_function')}\n")
+  sys.stderr.flush()
   if not hasattr(test, "test_function"):# only true if not called via "main"
     return pamh.PAM_SUCCESS		# normally happens only if run by ctest
-  test_function = globals()[test.test_function.__name__]
-  return test_function(test.test_results, who, pamh, flags, argv)
+  sys.stderr.write(f"DEBUG test(): test_function={test.test_function.__name__}\n")
+  sys.stderr.flush()
+  try:
+    test_function = globals()[test.test_function.__name__]
+    result = test_function(test.test_results, who, pamh, flags, argv)
+    sys.stderr.write(f"DEBUG test(): result={result}\n")
+    sys.stderr.flush()
+    return result
+  except Exception as e:
+    sys.stderr.write(f"DEBUG test(): EXCEPTION: {type(e).__name__}: {e}\n")
+    import traceback
+    traceback.print_exc(file=sys.stderr)
+    sys.stderr.flush()
+    raise
 
 def run_test(caller):
   import test
