@@ -66,9 +66,21 @@ ls -la build/lib.*/pam_python*.so 2>/dev/null || echo "No .so files found in bui
 ls -la pam_python.so 2>/dev/null || echo "No pam_python.so symlink found"
 
 echo ""
+echo "=== Extracting version from setup.py ==="
+VERSION=$(sed -n "s/.*version\s*=\s*\"\([^\"]*\)\".*/\1/p" setup.py)
+PYTHON_VERSION=$(python3 -c "import sys; print(str(sys.version_info.major)+chr(46)+str(sys.version_info.minor))")
+echo "Package version: $VERSION"
+echo "Python version: $PYTHON_VERSION"
+
+echo ""
 echo "=== Copying built library to dist/ ==="
 mkdir -p /src/dist
-cp build/lib.*/pam_python*.so /src/dist/
+for so_file in build/lib.*/pam_python*.so; do
+    base_name=$(basename "$so_file" .so)
+    dest_name="pam_python-${VERSION}-py${PYTHON_VERSION}.so"
+    cp "$so_file" "/src/dist/$dest_name"
+    echo "Copied to: /src/dist/$dest_name"
+done
 ls -la /src/dist/
 '
 
