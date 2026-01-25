@@ -1390,14 +1390,14 @@ static PyMethodDef PamEnv_Methods[] =
 #define	DECLARE_CONSTANT_GET_VALUE(x, v) \
   static PyObject* PamHandle_Constant_ ## x(PyObject* object, void* closure) { \
     object = object; \
-    closure = closure; \
+    (void)closure; \
     return PyLong_FromLong(v); \
   }
 
 #define	DECLARE_CONSTANT_GET(x)	\
   static PyObject* PamHandle_Constant_ ## x(PyObject* object, void* closure) { \
     object = object; \
-    closure = closure; \
+    (void)closure; \
     return PyLong_FromLong(x); \
   }
 
@@ -1505,12 +1505,12 @@ DECLARE_CONSTANT_GET(PAM_XDISPLAY)
 #define	MAKE_GETSET_ITEM(t) \
   static PyObject* PamHandle_get_##t(PyObject* self, void* closure) \
   { \
-    closure = closure; \
+    (void)closure; \
     return PamHandle_get_item(self, PAM_##t); \
   } \
   static int PamHandle_set_##t(PyObject* self, PyObject* pyValue, void* closure) \
   { \
-    closure = closure; \
+    (void)closure; \
     return PamHandle_set_item(self, PAM_##t, "PAM_" #t, pyValue); \
   }
 
@@ -1542,7 +1542,7 @@ static PyObject* PamHandle_get_XAUTHDATA(PyObject* self, void* closure)
   int			pam_result;
   struct pam_xauth_data* xauth_data = 0;
 
-  closure = closure;
+  (void)closure;
   pam_result = pam_get_item(
       pamHandle->pamh, PAM_XAUTHDATA, (const void**)&xauth_data);
   if (check_pam_result(pamHandle, pam_result) == -1)
@@ -1582,7 +1582,7 @@ static int PamHandle_set_XAUTHDATA(
   int			pam_result;
   struct pam_xauth_data	xauth_data;
 
-  closure = closure;
+  (void)closure;
   xauth_data.name = 0;
   xauth_data.data = 0;
   /*
