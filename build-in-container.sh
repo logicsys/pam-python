@@ -36,10 +36,15 @@ echo "=== Installing build dependencies ==="
 dnf install -y \
     gcc \
     make \
-    python3-devel \
+    python3.12-devel \
     pam-devel \
-    python3-setuptools \
-    python3-pip
+    python3.12-setuptools \
+    python3.12-pip
+
+echo ""
+echo "=== Setting up python3 to use python3.12 ==="
+alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+alternatives --set python3 /usr/bin/python3.12
 
 echo ""
 echo "=== Python version ==="
