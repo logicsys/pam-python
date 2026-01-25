@@ -10,7 +10,11 @@ doc:
 	$(MAKE) --directory doc
 
 .PHONY:	test
-test:	
+test:
+	$(MAKE) --directory src $@
+
+.PHONY:	sast sast-c sast-python sast-cppcheck sast-clang sast-bandit sast-flake8
+sast sast-c sast-python sast-cppcheck sast-clang sast-bandit sast-flake8:
 	$(MAKE) --directory src $@
 
 .PHONY:	clean-pam_python

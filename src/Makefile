@@ -51,3 +51,42 @@ test-pam_python-installed.pam: test-pam_python.pam.in Makefile
 installed-test: ctest /etc/pam.d/test-pam_python-installed.pam
 	python3 test.py
 	./ctest
+
+# SAST (Static Application Security Testing) targets
+.PHONY: sast sast-c sast-python sast-cppcheck sast-clang sast-bandit sast-flake8
+
+# Run all SAST checks
+sast: sast-c sast-python
+
+# C static analysis
+sast-c: sast-cppcheck sast-clang
+
+# Python static analysis
+sast-python: sast-bandit sast-flake8
+
+# cppcheck - lightweight C/C++ static analyzer
+sast-cppcheck:
+	@echo "=== Running cppcheck on C source ==="
+	@command -v cppcheck >/dev/null 2>&1 || { echo "cppcheck not installed. Install with: apt install cppcheck"; exit 1; }
+	cppcheck --enable=all --check-level=exhaustive --force --error-exitcode=1 \
+		--suppress=missingIncludeSystem --suppress=unusedFunction \
+		--suppress=checkersReport --inline-suppr \
+		pam_python.c ctest.c
+
+# clang static analyzer (scan-build)
+sast-clang:
+	@echo "=== Running clang static analyzer ==="
+	@command -v scan-build >/dev/null 2>&1 || { echo "scan-build not installed. Install with: apt install clang-tools"; exit 1; }
+	scan-build --status-bugs gcc -c $(WARNINGS) -I/usr/include/python3.* pam_python.c -o /dev/null
+
+# bandit - Python security linter
+sast-bandit:
+	@echo "=== Running bandit on Python source ==="
+	@command -v bandit >/dev/null 2>&1 || { echo "bandit not installed. Install with: pip install bandit"; exit 1; }
+	bandit -r test.py setup.py ../examples/ -ll
+
+# flake8 - Python style and logic checker
+sast-flake8:
+	@echo "=== Running flake8 on Python source ==="
+	@command -v flake8 >/dev/null 2>&1 || { echo "flake8 not installed. Install with: pip install flake8"; exit 1; }
+	flake8 --max-line-length=120 --ignore=E501,W503 test.py setup.py ../examples/
