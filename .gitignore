@@ -76,3 +76,6 @@ fabric.properties
 *.o
 
 *.pyc
+
+src/ctest
+doc/html
