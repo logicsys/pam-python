@@ -84,24 +84,50 @@ set +e
 echo ""
 echo "=== Running SAST checks ==="
 
+# Track SAST results (0=pass, 1=fail)
+SAST_CPPCHECK=0
+SAST_CLANG=0
+SAST_BANDIT=0
+SAST_FLAKE8=0
+
 echo ""
 echo "--- Running cppcheck on C source ---"
-make sast-cppcheck
+if make sast-cppcheck; then
+    echo "cppcheck: PASSED"
+else
+    SAST_CPPCHECK=1
+    echo "cppcheck: FAILED"
+fi
 
 echo ""
 echo "--- Running clang static analyzer ---"
-make sast-clang
+if make sast-clang; then
+    echo "clang: PASSED"
+else
+    SAST_CLANG=1
+    echo "clang: FAILED"
+fi
 
 echo ""
 echo "--- Running bandit on Python source ---"
-make sast-bandit
+if make sast-bandit; then
+    echo "bandit: PASSED"
+else
+    SAST_BANDIT=1
+    echo "bandit: FAILED"
+fi
 
 echo ""
 echo "--- Running flake8 on Python source ---"
-make sast-flake8
+if make sast-flake8; then
+    echo "flake8: PASSED"
+else
+    SAST_FLAKE8=1
+    echo "flake8: FAILED"
+fi
 
-echo ""
-echo "=== SAST checks passed! ==="
+# Check if any SAST checks failed
+SAST_FAILED=$((SAST_CPPCHECK + SAST_CLANG + SAST_BANDIT + SAST_FLAKE8))
 
 echo ""
 echo "=== Building C test program ==="
@@ -130,6 +156,41 @@ grep -i pam /var/log/messages 2>/dev/null || journalctl --no-pager 2>/dev/null |
 echo ""
 echo "=== Running C tests ==="
 ./ctest
+
+echo ""
+echo "========================================="
+echo "=== SAST Summary ==="
+echo "========================================="
+if [ $SAST_CPPCHECK -eq 0 ]; then
+    echo "  cppcheck:  PASSED"
+else
+    echo "  cppcheck:  FAILED"
+fi
+if [ $SAST_CLANG -eq 0 ]; then
+    echo "  clang:     PASSED"
+else
+    echo "  clang:     FAILED"
+fi
+if [ $SAST_BANDIT -eq 0 ]; then
+    echo "  bandit:    PASSED"
+else
+    echo "  bandit:    FAILED"
+fi
+if [ $SAST_FLAKE8 -eq 0 ]; then
+    echo "  flake8:    PASSED"
+else
+    echo "  flake8:    FAILED"
+fi
+echo "========================================="
+
+if [ $SAST_FAILED -gt 0 ]; then
+    echo ""
+    echo "========================================="
+    echo "=== SAST ISSUES FOUND: $SAST_FAILED check(s) failed ==="
+    echo "========================================="
+    echo "Review the output above to resolve SAST issues."
+    exit 1
+fi
 
 echo ""
 echo "========================================="
