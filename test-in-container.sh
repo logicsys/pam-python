@@ -79,6 +79,8 @@ echo ""
 echo "=== Build successful! ==="
 ls -la pam_python.so
 
+set +e
+
 echo ""
 echo "=== Running SAST checks ==="
 

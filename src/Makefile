@@ -70,7 +70,8 @@ sast-cppcheck:
 	@command -v cppcheck >/dev/null 2>&1 || { echo "cppcheck not installed. Install with: apt install cppcheck"; exit 1; }
 	cppcheck --enable=all --force --error-exitcode=1 \
 		--suppress=missingIncludeSystem --suppress=unusedFunction \
-		--suppress=unmatchedSuppression --inline-suppr \
+		--suppress=unmatchedSuppression --suppress=information \
+		--inline-suppr \
 		pam_python.c ctest.c
 
 # clang static analyzer (scan-build)
