@@ -944,7 +944,7 @@ static PyObject* PamEnvIter_iternext(PyObject* self)
   env = pam_getenvlist(pamEnvIter->env->pamHandle->pamh);
   if (env == 0)
     goto error_exit;
-  for (i = 0; env[i] != 0 && i < pamEnvIter->pos; i += 1)
+  for (i = 0; i < pamEnvIter->pos && env[i] != 0; i += 1)
     continue;
   if (env[i] == 0)
     goto error_exit;
