@@ -66,8 +66,8 @@
 #define arr_size(x)	(sizeof(x) / sizeof(*(x)))
 #define PyClass_Check(obj) PyObject_IsInstance(obj, (PyObject *)&PyType_Type)
 
-const char libpam_python_version[]	= "1.0.7";
-const char libpam_python_date[]		= "2020-04-24";
+const char libpam_python_version[]	= "2.1.0";
+const char libpam_python_date[]		= "2026-01-25";
 
 #define	PyCFunctionKwds_cast	(PyCFunction)(Py_ssize_t)
 

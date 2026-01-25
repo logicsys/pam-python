@@ -1,3 +1,10 @@
+pam-python-2.1.0 Sat, 25 Jan 2026 12:00:00 +1000
+
+  New: Python 3.12 support using PyConfig API
+  New: Build artifacts now include version tags (e.g., pam_python-2.1.0-py3.12.so)
+  New: Added Python version badge to README
+  Fix: PY_SSIZE_T_CLEAN macro for Python 3.12 compatibility
+
 pam-python-1.1.0 Sat, 18 Apr 2020 23:00:00 +1000
 
   New: Migrated from Python 2 to Python 3
