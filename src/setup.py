@@ -59,7 +59,7 @@ ext_modules = [
 
 setup(
     name="pam_python",
-    version="1.1.0",
+    version="2.1.0",
     description="Enabled PAM Modules to be written in Python",
     keywords="pam,embed,authentication,security",
     platforms="Unix",
