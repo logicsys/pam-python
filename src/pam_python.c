@@ -40,6 +40,7 @@
 
 #undef	_POSIX_C_SOURCE
 
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <dlfcn.h>
 #include <signal.h>
@@ -87,10 +88,29 @@ static char libpython_so[]	= LIBPYTHON_SO;
  */
 static void initialise_python(void)
 {
-#if	PY_MAJOR_VERSION*100 + PY_MINOR_VERSION >= 204
+#if	PY_MAJOR_VERSION*100 + PY_MINOR_VERSION >= 312
+  /*
+   * Python 3.12+ deprecated the global configuration flags.
+   * Use PyConfig API instead. The new API returns PyStatus structs,
+   * so we must disable -Waggregate-return for this section.
+   */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waggregate-return"
+  {
+    PyStatus status;
+    PyConfig config;
+    PyConfig_InitIsolatedConfig(&config);
+    config.write_bytecode = 0;
+    config.install_signal_handlers = 0;
+    status = Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
+    if (PyStatus_Exception(status))
+      Py_ExitStatusException(status);
+  }
+#pragma GCC diagnostic pop
+#elif	PY_MAJOR_VERSION*100 + PY_MINOR_VERSION >= 204
   Py_DontWriteBytecodeFlag = 1;
   Py_IgnoreEnvironmentFlag = 1;
-  /* Py_IsolatedFlag = 1; 		Python3 only */
   Py_IsolatedFlag = 1;
   Py_NoSiteFlag = 1;
   Py_NoUserSiteDirectory = 1;
@@ -1556,8 +1576,8 @@ static PyObject* PamHandle_get_XAUTHDATA(PyObject* self, void* closure)
   {
     newargs = Py_BuildValue(
         "s#s#",
-	xauth_data->name, xauth_data->namelen,
-	xauth_data->data, xauth_data->datalen);
+	xauth_data->name, (Py_ssize_t)xauth_data->namelen,
+	xauth_data->data, (Py_ssize_t)xauth_data->datalen);
     if (newargs == 0)
       goto error_exit;
     result = pamHandle->xauthdata->tp_new(pamHandle->xauthdata, newargs, 0);
