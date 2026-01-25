@@ -4,6 +4,8 @@
 #
 set -e
 
+. vars
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTAINER_NAME="pam-python-build-rocky9"
 IMAGE="rockylinux:9"
@@ -36,15 +38,15 @@ echo "=== Installing build dependencies ==="
 dnf install -y \
     gcc \
     make \
-    python3.12-devel \
+    python'${PYTHON_VER}'-devel \
     pam-devel \
-    python3.12-setuptools \
-    python3.12-pip
+    python'${PYTHON_VER}'-setuptools \
+    python'${PYTHON_VER}'-pip
 
 echo ""
-echo "=== Setting up python3 to use python3.12 ==="
-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
-alternatives --set python3 /usr/bin/python3.12
+echo "=== Setting up python3 to use python'${PYTHON_VER}' ==="
+alternatives --install /usr/bin/python3 python3 /usr/bin/python'${PYTHON_VER}' 1
+alternatives --set python3 /usr/bin/python'${PYTHON_VER}'
 
 echo ""
 echo "=== Python version ==="

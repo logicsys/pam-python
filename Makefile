@@ -17,6 +17,11 @@ test:
 sast sast-c sast-python sast-cppcheck sast-clang sast-bandit sast-flake8:
 	$(MAKE) --directory src $@
 
+.PHONY:	update-readme-badge
+update-readme-badge:
+	@. ./vars && sed -i "s|Python-[0-9.]*-blue|Python-$$PYTHON_VER-blue|g" README.md
+	@. ./vars && echo "Updated README.md badge to Python $$PYTHON_VER"
+
 .PHONY:	clean-pam_python
 clean-pam_python:
 	rm -rf pam_python
@@ -42,7 +47,7 @@ RELEASE_SOURCES = \
 	Makefile \
 	Makefile.release \
 	pam-python.html \
-	README.txt \
+	README.md \
 	doc/pam_python.rst \
 	src/ctest.c \
 	src/Makefile \
