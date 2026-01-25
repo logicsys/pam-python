@@ -33,6 +33,7 @@ $RUNTIME run --rm --name "$CONTAINER_NAME" \
 set -e
 
 echo "=== Installing build dependencies ==="
+dnf install -y epel-release
 dnf install -y \
     gcc \
     make \
@@ -40,7 +41,13 @@ dnf install -y \
     pam-devel \
     python3-setuptools \
     python3-pip \
-    gdb
+    gdb \
+    cppcheck \
+    clang-tools-extra
+
+echo ""
+echo "=== Installing Python SAST tools ==="
+pip3 install bandit flake8
 
 echo ""
 echo "=== Installing git for PyPAM build ==="
@@ -71,6 +78,28 @@ make build
 echo ""
 echo "=== Build successful! ==="
 ls -la pam_python.so
+
+echo ""
+echo "=== Running SAST checks ==="
+
+echo ""
+echo "--- Running cppcheck on C source ---"
+make sast-cppcheck
+
+echo ""
+echo "--- Running clang static analyzer ---"
+make sast-clang
+
+echo ""
+echo "--- Running bandit on Python source ---"
+make sast-bandit
+
+echo ""
+echo "--- Running flake8 on Python source ---"
+make sast-flake8
+
+echo ""
+echo "=== SAST checks passed! ==="
 
 echo ""
 echo "=== Building C test program ==="

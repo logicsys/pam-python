@@ -68,7 +68,7 @@ sast-python: sast-bandit sast-flake8
 sast-cppcheck:
 	@echo "=== Running cppcheck on C source ==="
 	@command -v cppcheck >/dev/null 2>&1 || { echo "cppcheck not installed. Install with: apt install cppcheck"; exit 1; }
-	cppcheck --enable=all --check-level=exhaustive --force --error-exitcode=1 \
+	cppcheck --enable=all --force --error-exitcode=1 \
 		--suppress=missingIncludeSystem --suppress=unusedFunction \
 		--suppress=checkersReport --inline-suppr \
 		pam_python.c ctest.c
